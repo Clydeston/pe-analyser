@@ -238,6 +238,7 @@ void Parse::GetOptionalHeaderInfo()
 }
 
 // TODO FIX INCORRECT SECTIONS??? 
+// TODO GET ADDRESS OF IMPORT TABLE FROM IDATA SECTION 
 void Parse::ParsePESections()
 {	
 	printf("\n");
@@ -254,27 +255,36 @@ void Parse::ParsePESections()
 	)");
 	printf("\n");
 
+	// section headers located directly after nt header struct
+	IMAGE_SECTION_HEADER* pSectionHeader = (IMAGE_SECTION_HEADER*)(this->pNtHeader + 1);
 	for (int i = 0; i < this->pNtHeader->FileHeader.NumberOfSections; i++)
 	{				
-		PVOID pOffsetOfHeader = (PVOID)(pFile + this->pDosHeader->e_lfanew + sizeof(this->pNtHeader) + (i * sizeof(IMAGE_SECTION_HEADER)));
-		PIMAGE_SECTION_HEADER pSectHeader = (PIMAGE_SECTION_HEADER)pOffsetOfHeader;
-
-		printf("\nName: %s\n", pSectHeader->Name);
+		// KEEP FOR X64 CHECKING CANT FIGURE THIS OUT YET
+		/*PVOID pOffsetOfHeader = (PVOID)(pFile + this->pDosHeader->e_lfanew + sizeof(this->pNtHeader) + (i * sizeof(IMAGE_SECTION_HEADER)));
+		PIMAGE_SECTION_HEADER pSectHeader = (PIMAGE_SECTION_HEADER)pOffsetOfHeader;*/
+		
+		printf("\nName: %s\n", pSectionHeader[i].Name);
 
 		ft_table_t* table = ft_create_table();
 		ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
 
 		ft_write_ln(table, "#", "Name", "value");
-		ft_printf_ln(table, "%d | %s | %X", 1, "Virtual Size", pSectHeader->Misc.VirtualSize);
-		ft_printf_ln(table, "%d | %s | %X", 3, "Virtual Address", pSectHeader->VirtualAddress);
-		ft_printf_ln(table, "%d | %s | %X", 4, "Size Of Raw Data", pSectHeader->SizeOfRawData);
-		ft_printf_ln(table, "%d | %s | %X", 5, "Ptr To Raw Data", pSectHeader->PointerToRawData);
-		ft_printf_ln(table, "%d | %s | %X", 6, "Ptr To Relocations", pSectHeader->PointerToRelocations);
-		ft_printf_ln(table, "%d | %s | %X", 7, "Ptr to Line Numbers", pSectHeader->PointerToLinenumbers);
-		ft_printf_ln(table, "%d | %s | %X", 8, "Number Of  Relocations", pSectHeader->NumberOfRelocations);
-		ft_printf_ln(table, "%d | %s | %X", 9, "Number Of Line Numbers", pSectHeader->NumberOfLinenumbers);
-		ft_printf_ln(table, "%d | %s | %X", 11, "Characteristics", pSectHeader->Characteristics);
+		ft_printf_ln(table, "%d | %s | %X", 1, "Virtual Size", pSectionHeader[i].Misc.VirtualSize);
+		ft_printf_ln(table, "%d | %s | %X", 3, "Virtual Address", pSectionHeader[i].VirtualAddress);
+		ft_printf_ln(table, "%d | %s | %X", 4, "Size Of Raw Data", pSectionHeader[i].SizeOfRawData);
+		ft_printf_ln(table, "%d | %s | %X", 5, "Ptr To Raw Data", pSectionHeader[i].PointerToRawData);
+		ft_printf_ln(table, "%d | %s | %X", 6, "Ptr To Relocations", pSectionHeader[i].PointerToRelocations);
+		ft_printf_ln(table, "%d | %s | %X", 7, "Ptr to Line Numbers", pSectionHeader[i].PointerToLinenumbers);
+		ft_printf_ln(table, "%d | %s | %X", 8, "Number Of  Relocations", pSectionHeader[i].NumberOfRelocations);
+		ft_printf_ln(table, "%d | %s | %X", 9, "Number Of Line Numbers", pSectionHeader[i].NumberOfLinenumbers);
+		ft_printf_ln(table, "%d | %s | %X", 11, "Characteristics", pSectionHeader[i].Characteristics);
 
+		BYTE name[8] = ".idata";
+		if (!memcmp(&name, &pSectionHeader[i].Name, sizeof(name)))
+		{
+			printf("Found Import Directory\n");
+			this->pImportDirectoryTable = (IMAGE_IMPORT_DESCRIPTOR*)(this->pFile + pSectionHeader[i].VirtualAddress);
+		}
 
 		printf("%s\n", ft_to_string(table));
 		ft_destroy_table(table);
@@ -282,11 +292,19 @@ void Parse::ParsePESections()
 	}
 }
 
-
 void Parse::ParsePEImports()
 {
-	DWORD pImportRVA = this->pNtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
-	IMAGE_SECTION_HEADER* pImportSection;
-	IMAGE_IMPORT_DESCRIPTOR* pImportDescription;
-	//PVOID pImportSection = this->pFile + pImportRVA;
+	printf("Address of import dir %X\n", this->pImportDirectoryTable);
+	//this->pImportDirectoryTable = (IMAGE_IMPORT_DESCRIPTOR*)(this->pFile + this->pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+	printf("Base addr: %X, \nAddress of import dir %X",this->pFile, this->pImportDirectoryTable);
+
+	int i = 0;
+
+	//IMAGE_THUNK_DATA* pIltPtr = (IMAGE_THUNK_DATA*)(this->pFile + this->pImportDirectoryTable->OriginalFirstThunk);
+	//IMAGE_THUNK_DATA* pIatPtr = (IMAGE_THUNK_DATA*)(this->pFile + this->pImportDirectoryTable->FirstThunk);
+
+	while (this->pImportDirectoryTable[0].Characteristics)
+	{
+
+	}
 }

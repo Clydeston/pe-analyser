@@ -11,9 +11,10 @@ public:
 	IMAGE_NT_HEADERS* pNtHeader;
 	IMAGE_FILE_HEADER* pFileHeader;
 	IMAGE_OPTIONAL_HEADER* pOptionalHeader;
+	IMAGE_IMPORT_DESCRIPTOR* pImportDirectoryTable;
 
 	const char* filePath;	
-	PBYTE pFile;
+	LPBYTE pFile;
 
 	bool IsFileValid();
 	void GetFileInfo();
